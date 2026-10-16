@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { formatBDT, formatLakh } from "@/lib/demo-data";
+import { formatK, formatUSD } from "@/lib/demo-data";
 
-// Chart palette: categorical slots 1 & 2 (validated, blue/orange); text stays in ink tokens.
+// Chart palette: validated categorical slots 1-3 in fixed order (blue, orange, aqua); text stays in ink tokens.
+// Aqua sits below 3:1 on white, so the labour chart always shows a legend and per-bar tooltip.
 const SERIES_1 = "#2a78d6";
 const SERIES_2 = "#eb6834";
+const SERIES_3 = "#1baf7a";
 const GRID = "#e7e5e4";
 const AXIS_TEXT = "#78716c";
 
@@ -20,8 +22,8 @@ export function BudgetChart({ data, totalBudget }) {
   const pad = { top: 20, right: 16, bottom: 28, left: 48 };
   const innerW = W - pad.left - pad.right;
   const innerH = H - pad.top - pad.bottom;
-  const yMax = 9000000;
-  const ticks = [0, 2000000, 4000000, 6000000, 8000000];
+  const peak = Math.max(totalBudget, ...data.map((d) => d.spent));
+  const { max: yMax, ticks } = niceScale(peak * 1.08);
 
   const x = (i) => pad.left + (i / (data.length - 1)) * innerW;
   const y = (v) => pad.top + innerH - (v / yMax) * innerH;
@@ -47,7 +49,7 @@ export function BudgetChart({ data, totalBudget }) {
         onPointerMove={handleMove}
         onPointerLeave={() => setActive(null)}
         role="img"
-        aria-label={`Cumulative spend, reaching ${formatBDT(data[data.length - 1].spent)} of ${formatBDT(totalBudget)} budget`}
+        aria-label={`Cumulative spend, reaching ${formatUSD(data[data.length - 1].spent)}${totalBudget > 0 ? ` of ${formatUSD(totalBudget)} budget` : ""}`}
       >
         <defs>
           <linearGradient id="burnFill" x1="0" x2="0" y1="0" y2="1">
@@ -60,12 +62,14 @@ export function BudgetChart({ data, totalBudget }) {
           <g key={t}>
             <line x1={pad.left} x2={W - pad.right} y1={y(t)} y2={y(t)} stroke={GRID} strokeWidth="1" />
             <text x={pad.left - 8} y={y(t) + 4} textAnchor="end" fontSize="11" fill={AXIS_TEXT}>
-              {t === 0 ? "0" : `${t / 100000}L`}
+              {t === 0 ? "0" : t >= 1000 ? `$${t / 1000}k` : `$${t}`}
             </text>
           </g>
         ))}
 
         {/* Total budget reference */}
+        {totalBudget > 0 && (
+          <>
         <line
           x1={pad.left}
           x2={W - pad.right}
@@ -76,14 +80,16 @@ export function BudgetChart({ data, totalBudget }) {
           strokeDasharray="5 4"
         />
         <text x={pad.left + 6} y={y(totalBudget) - 7} fontSize="11" fontWeight="600" fill="#44403c">
-          Total budget {formatLakh(totalBudget)}
+          Total budget {formatK(totalBudget)}
         </text>
+          </>
+        )}
 
         <path d={area} fill="url(#burnFill)" />
         <path d={line} fill="none" stroke={SERIES_1} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
 
         {data.map((d, i) =>
-          i % 2 === 0 || i === data.length - 1 ? (
+          (i % 2 === 0 && i < data.length - 2) || i === data.length - 1 ? (
             <text key={d.week} x={x(i)} y={H - 8} textAnchor="middle" fontSize="11" fill={AXIS_TEXT}>
               {d.label}
             </text>
@@ -94,7 +100,7 @@ export function BudgetChart({ data, totalBudget }) {
         <circle cx={x(last)} cy={y(data[last].spent)} r="4.5" fill={SERIES_1} stroke="#fff" strokeWidth="2" />
         {point === null && (
           <text x={x(last) - 10} y={y(data[last].spent) - 12} textAnchor="end" fontSize="12" fontWeight="600" fill="#1c1917">
-            {formatLakh(data[last].spent)} spent
+            {formatK(data[last].spent)} spent
           </text>
         )}
 
@@ -118,47 +124,60 @@ export function BudgetChart({ data, totalBudget }) {
           <p className="font-medium text-stone-500">
             {point.week} · {point.label}
           </p>
-          <p className="mt-0.5 text-sm font-semibold text-stone-900">{formatBDT(point.spent)}</p>
-          <p className="text-stone-500">{Math.round((point.spent / totalBudget) * 100)}% of budget</p>
+          <p className="mt-0.5 text-sm font-semibold text-stone-900">{formatUSD(point.spent)}</p>
+          {totalBudget > 0 && <p className="text-stone-500">{Math.round((point.spent / totalBudget) * 100)}% of budget</p>}
         </div>
       )}
     </div>
   );
 }
 
-/* ---------- Labour this week: stacked bars, masons + helpers ---------- */
+/* ---------- Labour: stacked bars, masons + helpers + other ---------- */
+
+const LABOUR_SERIES = [
+  { key: "mason", label: "Masons", color: SERIES_1 },
+  { key: "helper", label: "Helpers", color: SERIES_2 },
+  { key: "other", label: "Other", color: SERIES_3 },
+];
 
 export function LabourChart({ data }) {
   const [active, setActive] = useState(null);
+
+  // Hide the "Other" series when nobody was logged under it.
+  const series = LABOUR_SERIES.filter((s) => s.key !== "other" || data.some((d) => d.other > 0));
+  const total = (d) => series.reduce((sum, s) => sum + (d[s.key] ?? 0), 0);
 
   const W = 420;
   const H = 230;
   const pad = { top: 26, right: 8, bottom: 30, left: 30 };
   const innerW = W - pad.left - pad.right;
   const innerH = H - pad.top - pad.bottom;
-  const yMax = 30;
+  const { max: yMax, ticks: labourTicks } = niceScale(Math.max(10, ...data.map(total)) * 1.1);
   const slot = innerW / data.length;
   const barW = Math.min(36, slot * 0.56);
   const y = (v) => pad.top + innerH - (v / yMax) * innerH;
   const h = (v) => (v / yMax) * innerH;
 
   const prior = data.slice(0, -1);
-  const avg = prior.reduce((s, d) => s + d.mason + d.helper, 0) / prior.length;
+  const avg = prior.length ? prior.reduce((s, d) => s + total(d), 0) / prior.length : null;
 
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center gap-4 text-xs text-stone-600">
-        <LegendItem color={SERIES_1} label="Masons" />
-        <LegendItem color={SERIES_2} label="Helpers" />
-        <span className="flex items-center gap-1.5">
-          <span className="w-4 border-t-[1.5px] border-dashed border-stone-500" />
-          Avg earlier this week ({avg.toFixed(1)})
-        </span>
+        {series.map((s) => (
+          <LegendItem key={s.key} color={s.color} label={s.label} />
+        ))}
+        {avg !== null && (
+          <span className="flex items-center gap-1.5">
+            <span className="w-4 border-t-[1.5px] border-dashed border-stone-500" />
+            Avg of earlier days ({avg.toFixed(1)})
+          </span>
+        )}
       </div>
 
       <div className="relative">
-        <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full select-none" role="img" aria-label="Workers present per day this week">
-          {[0, 10, 20, 30].map((t) => (
+        <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full select-none" role="img" aria-label="Workers present per day">
+          {labourTicks.map((t) => (
             <g key={t}>
               <line x1={pad.left} x2={W - pad.right} y1={y(t)} y2={y(t)} stroke={GRID} />
               <text x={pad.left - 6} y={y(t) + 4} textAnchor="end" fontSize="11" fill={AXIS_TEXT}>
@@ -170,24 +189,32 @@ export function LabourChart({ data }) {
           {data.map((d, i) => {
             const cx = pad.left + slot * i + slot / 2;
             const x0 = cx - barW / 2;
-            const total = d.mason + d.helper;
             const isLast = i === data.length - 1;
             const dim = active !== null && active !== i;
+            // Stack non-empty segments from the baseline up; 2px surface gap between them,
+            // rounded corners only on the topmost segment.
+            const segments = series.filter((s) => d[s.key] > 0);
+            let base = 0;
             return (
               <g
-                key={d.day}
+                key={`${d.date}-${i}`}
                 onPointerEnter={() => setActive(i)}
                 onPointerLeave={() => setActive(null)}
                 opacity={dim ? 0.45 : 1}
                 className="transition-opacity"
               >
                 <rect x={pad.left + slot * i} y={pad.top} width={slot} height={innerH} fill="transparent" />
-                {/* mason segment sits on the baseline; helper stacked above with a 2px gap */}
-                <path d={roundedTop(x0, y(d.mason), barW, h(d.mason), 0)} fill={SERIES_1} />
-                <path d={roundedTop(x0, y(total), barW, h(d.helper) - 2, 4)} fill={SERIES_2} />
+                {segments.map((s, j) => {
+                  const v = d[s.key];
+                  const top = base + v;
+                  const gap = j > 0 ? 2 : 0;
+                  const path = roundedTop(x0, y(top), barW, Math.max(0, h(v) - gap), j === segments.length - 1 ? 4 : 0);
+                  base = top;
+                  return <path key={s.key} d={path} fill={s.color} />;
+                })}
                 {isLast && (
-                  <text x={cx} y={y(total) - 8} textAnchor="middle" fontSize="11" fontWeight="600" fill="#1c1917">
-                    {total}
+                  <text x={cx} y={y(total(d)) - 8} textAnchor="middle" fontSize="11" fontWeight="600" fill="#1c1917">
+                    {total(d)}
                   </text>
                 )}
                 <text x={cx} y={H - 10} textAnchor="middle" fontSize="11" fill={isLast ? "#1c1917" : AXIS_TEXT} fontWeight={isLast ? 600 : 400}>
@@ -197,7 +224,9 @@ export function LabourChart({ data }) {
             );
           })}
 
-          <line x1={pad.left} x2={W - pad.right} y1={y(avg)} y2={y(avg)} stroke="#57534e" strokeWidth="1.5" strokeDasharray="5 4" pointerEvents="none" />
+          {avg !== null && (
+            <line x1={pad.left} x2={W - pad.right} y1={y(avg)} y2={y(avg)} stroke="#57534e" strokeWidth="1.5" strokeDasharray="5 4" pointerEvents="none" />
+          )}
         </svg>
 
         {active !== null && (
@@ -205,19 +234,19 @@ export function LabourChart({ data }) {
             className="pointer-events-none absolute top-0 rounded-lg border border-stone-200 bg-white/95 px-3 py-2 text-xs shadow-lg shadow-stone-900/10"
             style={{
               left: `${((pad.left + slot * active + slot / 2) / W) * 100}%`,
-              transform: active > data.length / 2 ? "translateX(calc(-100% - 22px))" : "translateX(22px)",
+              transform: active >= data.length / 2 ? "translateX(calc(-100% - 22px))" : "translateX(22px)",
             }}
           >
             <p className="font-medium text-stone-500">
               {data[active].day}, {data[active].date}
             </p>
-            <p className="mt-1 flex items-center gap-1.5 text-stone-700">
-              <span className="size-2 rounded-sm" style={{ background: SERIES_1 }} /> Masons <b className="ml-auto pl-3 text-stone-900">{data[active].mason}</b>
-            </p>
-            <p className="flex items-center gap-1.5 text-stone-700">
-              <span className="size-2 rounded-sm" style={{ background: SERIES_2 }} /> Helpers <b className="ml-auto pl-3 text-stone-900">{data[active].helper}</b>
-            </p>
-            <p className="mt-1 border-t border-stone-100 pt-1 font-semibold text-stone-900">Total {data[active].mason + data[active].helper}</p>
+            {series.map((s) => (
+              <p key={s.key} className="mt-1 flex items-center gap-1.5 text-stone-700">
+                <span className="size-2 rounded-sm" style={{ background: s.color }} /> {s.label}
+                <b className="ml-auto pl-3 text-stone-900">{data[active][s.key] ?? 0}</b>
+              </p>
+            ))}
+            <p className="mt-1 border-t border-stone-100 pt-1 font-semibold text-stone-900">Total {total(data[active])}</p>
           </div>
         )}
       </div>
@@ -238,4 +267,15 @@ function LegendItem({ color, label }) {
 function roundedTop(x, y, w, h, r) {
   const rr = Math.min(r, w / 2, Math.max(h, 0));
   return `M${x},${y + h} L${x},${y + rr} Q${x},${y} ${x + rr},${y} L${x + w - rr},${y} Q${x + w},${y} ${x + w},${y + rr} L${x + w},${y + h} Z`;
+}
+
+// Round axis: a 1/2/2.5/5 × 10ⁿ step giving about four gridlines up to `value`.
+function niceScale(value) {
+  const raw = Math.max(value, 1) / 4;
+  const pow = 10 ** Math.floor(Math.log10(raw));
+  const step = [1, 2, 2.5, 5, 10].map((m) => m * pow).find((s) => s >= raw);
+  const max = Math.ceil(value / step) * step;
+  const ticks = [];
+  for (let t = 0; t <= max; t += step) ticks.push(t);
+  return { max, ticks };
 }

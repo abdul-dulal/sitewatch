@@ -22,7 +22,9 @@ export function PhoneMockup() {
           </div>
 
           <div>
-            <p className="mb-1.5 text-xs font-medium text-stone-500">Materials used</p>
+            <p className="mb-1.5 text-xs font-medium text-stone-500">
+              Materials used
+            </p>
             <div className="space-y-1.5">
               <Row label="Cement" value="38 bags" />
               <Row label="Rod" value="0.4 t" />
@@ -31,17 +33,25 @@ export function PhoneMockup() {
 
           <div className="rounded-xl border border-stone-200 px-3 py-2">
             <p className="text-xs text-stone-500">Cash spent today</p>
-            <p className="text-lg font-semibold text-stone-900">BDT 71,500</p>
+            <p className="text-lg font-semibold text-stone-900">$595</p>
           </div>
 
           <div>
-            <p className="mb-1.5 text-xs font-medium text-stone-500">Photos (4)</p>
+            <p className="mb-1.5 text-xs font-medium text-stone-500">
+              Photos (4)
+            </p>
             <div className="grid grid-cols-4 gap-1.5">
-              {["from-stone-300 to-stone-500", "from-amber-200 to-amber-500", "from-slate-300 to-slate-600", "from-orange-200 to-orange-500"].map(
-                (tone) => (
-                  <div key={tone} className={`aspect-square rounded-lg bg-gradient-to-br ${tone}`} />
-                ),
-              )}
+              {[
+                "from-stone-300 to-stone-500",
+                "from-amber-200 to-amber-500",
+                "from-slate-300 to-slate-600",
+                "from-orange-200 to-orange-500",
+              ].map((tone) => (
+                <div
+                  key={tone}
+                  className={`aspect-square rounded-lg bg-gradient-to-br ${tone}`}
+                />
+              ))}
             </div>
           </div>
 

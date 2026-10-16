@@ -8,12 +8,11 @@ export const project = {
   owner: "Kamal Rahman",
   ownerCity: "London, UK",
   manager: "Jalal Uddin",
-  currency: "BDT",
-  totalBudget: 8500000,
-  dailyLimit: 60000,
+  currency: "USD",
+  totalBudget: 70000,
+  dailyLimit: 500,
   startDate: "2026-06-01",
   today: "2026-10-15",
-  gbpRate: 152, // BDT per GBP, for the owner's reference figure
   phases: [
     { name: "Foundation", status: "done", progress: 100 },
     { name: "Ground floor frame", status: "done", progress: 100 },
@@ -23,19 +22,19 @@ export const project = {
   ],
 };
 
-// Cumulative spend per week (BDT), weeks counted from project start.
+// Cumulative spend per week (USD), weeks counted from project start.
 export const spendByWeek = [
-  { week: "W1", label: "1 Jun", spent: 410000 },
-  { week: "W3", label: "15 Jun", spent: 980000 },
-  { week: "W5", label: "29 Jun", spent: 1460000 },
-  { week: "W7", label: "13 Jul", spent: 1920000 },
-  { week: "W9", label: "27 Jul", spent: 2510000 },
-  { week: "W11", label: "10 Aug", spent: 3040000 },
-  { week: "W13", label: "24 Aug", spent: 3620000 },
-  { week: "W15", label: "7 Sep", spent: 4180000 },
-  { week: "W17", label: "21 Sep", spent: 4710000 },
-  { week: "W19", label: "5 Oct", spent: 5230000 },
-  { week: "W20", label: "15 Oct", spent: 5482000 },
+  { week: "W1", label: "1 Jun", spent: 3400 },
+  { week: "W3", label: "15 Jun", spent: 8100 },
+  { week: "W5", label: "29 Jun", spent: 12000 },
+  { week: "W7", label: "13 Jul", spent: 15800 },
+  { week: "W9", label: "27 Jul", spent: 20700 },
+  { week: "W11", label: "10 Aug", spent: 25000 },
+  { week: "W13", label: "24 Aug", spent: 29800 },
+  { week: "W15", label: "7 Sep", spent: 34400 },
+  { week: "W17", label: "21 Sep", spent: 38800 },
+  { week: "W19", label: "5 Oct", spent: 43000 },
+  { week: "W20", label: "15 Oct", spent: 45100 },
 ];
 
 // Workers present per day this week (from daily_logs).
@@ -59,12 +58,12 @@ export const stock = [
 
 export const today = {
   date: "Thu, 15 Oct 2026",
-  cashSpent: 71500,
+  cashSpent: 595,
   masons: 11,
   helpers: 17,
   photos: 4,
   loggedAt: "7:42 pm",
-  materialsIn: [{ name: "Cement", qty: "50 bags", cost: 27500 }],
+  materialsIn: [{ name: "Cement", qty: "50 bags", cost: 230 }],
   materialsUsed: [
     { name: "Cement", qty: "38 bags" },
     { name: "Rod", qty: "0.4 t" },
@@ -86,7 +85,7 @@ export const alerts = [
     id: 2,
     level: "warning",
     title: "Daily spend crossed the limit",
-    detail: "BDT 71,500 spent vs. BDT 60,000 daily limit (+19%).",
+    detail: "$595 spent vs. $500 daily limit (+19%).",
     time: "Today, 7:43 pm",
     sentTo: "Owner (email + SMS), Manager (SMS)",
   },
@@ -109,41 +108,90 @@ export const alerts = [
 ];
 
 export const recentLogs = [
-  { date: "15 Oct", workers: 28, spent: 71500, photos: 4, status: "flagged" },
-  { date: "14 Oct", workers: 18, spent: 52300, photos: 3, status: "ok" },
-  { date: "13 Oct", workers: 15, spent: 38900, photos: 3, status: "ok" },
-  { date: "12 Oct", workers: 17, spent: 44100, photos: 2, status: "late" },
-  { date: "11 Oct", workers: 16, spent: 41800, photos: 4, status: "ok" },
-  { date: "10 Oct", workers: 15, spent: 36200, photos: 3, status: "ok" },
+  { date: "15 Oct", workers: 28, spent: 595, photos: 4, status: "flagged" },
+  { date: "14 Oct", workers: 18, spent: 435, photos: 3, status: "ok" },
+  { date: "13 Oct", workers: 15, spent: 325, photos: 3, status: "ok" },
+  { date: "12 Oct", workers: 17, spent: 365, photos: 2, status: "late" },
+  { date: "11 Oct", workers: 16, spent: 350, photos: 4, status: "ok" },
+  { date: "10 Oct", workers: 15, spent: 300, photos: 3, status: "ok" },
 ];
 
 export const photoTimeline = [
-  { date: "15 Oct", caption: "Slab casting, east side", tone: "from-stone-400 to-stone-600" },
-  { date: "15 Oct", caption: "Mixer machine on site", tone: "from-amber-300 to-amber-600" },
-  { date: "14 Oct", caption: "Rod binding complete", tone: "from-slate-400 to-slate-700" },
-  { date: "13 Oct", caption: "Shuttering, first floor", tone: "from-orange-300 to-orange-700" },
-  { date: "12 Oct", caption: "Cement delivery, 50 bags", tone: "from-zinc-300 to-zinc-600" },
-  { date: "11 Oct", caption: "Column check, north wall", tone: "from-emerald-300 to-emerald-700" },
+  {
+    date: "15 Oct",
+    caption: "Slab casting, east side",
+    tone: "from-stone-400 to-stone-600",
+  },
+  {
+    date: "15 Oct",
+    caption: "Mixer machine on site",
+    tone: "from-amber-300 to-amber-600",
+  },
+  {
+    date: "14 Oct",
+    caption: "Rod binding complete",
+    tone: "from-slate-400 to-slate-700",
+  },
+  {
+    date: "13 Oct",
+    caption: "Shuttering, first floor",
+    tone: "from-orange-300 to-orange-700",
+  },
+  {
+    date: "12 Oct",
+    caption: "Cement delivery, 50 bags",
+    tone: "from-zinc-300 to-zinc-600",
+  },
+  {
+    date: "11 Oct",
+    caption: "Column check, north wall",
+    tone: "from-emerald-300 to-emerald-700",
+  },
 ];
 
 export const claudeReport = `Today was a heavy day on site: the crew cast the east half of the first-floor slab. That explains most of what you see in the numbers — 50 bags of cement arrived, 38 were used, and a mixer was rented for the day.
 
-Two things need your attention. Spending reached BDT 71,500, about 19% above your BDT 60,000 daily limit, and 28 workers were reported, well above this week's average of 16. Slab days usually need extra hands, so this may be fine, but it is worth confirming the count with Jalal. Stone chips are also low (190 cft left), so another order will be needed before the west half is cast.
+Two things need your attention. Spending reached $595, about 19% above your $500 daily limit, and 28 workers were reported, well above this week's average of 16. Slab days usually need extra hands, so this may be fine, but it is worth confirming the count with Jalal. Stone chips are also low (190 cft left), so another order will be needed before the west half is cast.
 
 Overall you have used 64% of the budget with the build at roughly 58% complete.`;
 
 export const workflows = [
-  { name: "Log intake", trigger: "Webhook from manager form", lastRun: "7:42 pm", status: "ok" },
-  { name: "Instant alerts", trigger: "Called by Log intake", lastRun: "7:43 pm", status: "ok" },
-  { name: "Daily report", trigger: "10:00 pm Asia/Dhaka", lastRun: "Yesterday 10:00 pm", status: "ok" },
-  { name: "Missed-log check", trigger: "9:00 pm & 9:00 am", lastRun: "9:00 am", status: "ok" },
-  { name: "Weekly summary", trigger: "Friday 10:00 pm", lastRun: "Fri, 9 Oct", status: "ok" },
+  {
+    name: "Log intake",
+    trigger: "Webhook from manager form",
+    lastRun: "7:42 pm",
+    status: "ok",
+  },
+  {
+    name: "Instant alerts",
+    trigger: "Called by Log intake",
+    lastRun: "7:43 pm",
+    status: "ok",
+  },
+  {
+    name: "Daily report",
+    trigger: "10:00 pm Asia/Dhaka",
+    lastRun: "Yesterday 10:00 pm",
+    status: "ok",
+  },
+  {
+    name: "Missed-log check",
+    trigger: "9:00 pm & 9:00 am",
+    lastRun: "9:00 am",
+    status: "ok",
+  },
+  {
+    name: "Weekly summary",
+    trigger: "Friday 10:00 pm",
+    lastRun: "Fri, 9 Oct",
+    status: "ok",
+  },
 ];
 
-export function formatBDT(value) {
-  return "BDT " + Math.round(value).toLocaleString("en-IN");
+export function formatUSD(value) {
+  return "$" + Math.round(value).toLocaleString("en-US");
 }
 
-export function formatLakh(value) {
-  return "BDT " + (value / 100000).toFixed(1) + "L";
+export function formatK(value) {
+  return "$" + (value / 1000).toFixed(1) + "k";
 }
